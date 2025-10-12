@@ -1,0 +1,15 @@
+[submodule "account"]
+	path = account
+	url = https://github.com/ViniciusAlves03/expenses-account.git
+[submodule "budgets"]
+	path = budgets
+	url = https://github.com/ViniciusAlves03/expenses-budgets.git
+[submodule "incomes"]
+	path = incomes
+	url = https://github.com/ViniciusAlves03/expenses-incomes.git
+[submodule "categories"]
+	path = categories
+	url = https://github.com/ViniciusAlves03/expenses-categories.git
+[submodule "expenses"]
+	path = expenses
+	url = https://github.com/ViniciusAlves03/expenses-exp-core.git
