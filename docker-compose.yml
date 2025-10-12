@@ -1,0 +1,215 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: exp-mongo
+    ports:
+      - "27017:27017"
+    restart: always
+    volumes:
+      - exp-mongo-data:/data/db
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: exp-rabbitmq
+    restart: always
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  account:
+    container_name: exp-account
+    build: ./account
+    restart: always
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      - TZ=America/Recife
+      - NODE_ENV=development
+      - PORT_HTTP=3000
+      - PORT_HTTPS=3001
+      - JWT_SECRET=s1cr1tk1y
+      - SSL_CERT_PATH=/certs/server_cert.pem
+      - SSL_KEY_PATH=/certs/server_key.pem
+      - JWT_PRIVATE_KEY_PATH=/certs/jwt.key
+      - JWT_PUBLIC_KEY_PATH=/certs/jwt.key.pub
+      - ISSUER=exps
+      - ADMIN_EMAIL=admin@exp.com
+      - ADMIN_PASSWORD=admin123
+      - MONGODB_URI=mongodb://mongo:27017/expensesDB
+      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - MONGODB_ENABLE_TLS=false
+      - MONGODB_KEY_PATH=.certs/mongodb/client.pem
+      - MONGODB_CA_PATH=.certs/mongodb/ca.pem
+      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
+      - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
+      - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
+      - RABBITMQ_RPC_TIMEOUT=15000
+      - DASHBOARD_HOST=http://localhost:4200
+    volumes:
+      - ./.certs/account:/certs:ro
+      - ./logs:/usr/src/account/logs
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+  budgets:
+    container_name: exp-budgets
+    build: ./budgets
+    restart: always
+    ports:
+      - "4000:4000"
+      - "4001:4001"
+    environment:
+      - TZ=America/Recife
+      - NODE_ENV=development
+      - PORT_HTTP=4000
+      - PORT_HTTPS=4001
+      - ISSUER=exps
+      - MONGODB_URI=mongodb://mongo:27017/expensesDB
+      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - MONGODB_ENABLE_TLS=false
+      - MONGODB_KEY_PATH=.certs/mongodb/client.pem
+      - MONGODB_CA_PATH=.certs/mongodb/ca.pem
+      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
+      - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
+      - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
+      - RABBITMQ_RPC_TIMEOUT=15000
+    volumes:
+      - ./.certs/budgets:/certs:ro
+      - ./logs:/usr/src/budgets/logs
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+  categories:
+    container_name: exp-categories
+    build: ./categories
+    restart: always
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    environment:
+      - TZ=America/Recife
+      - NODE_ENV=development
+      - PORT_HTTP=5000
+      - PORT_HTTPS=5001
+      - ISSUER=exps
+      - MONGODB_URI=mongodb://mongo:27017/expensesDB
+      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - MONGODB_ENABLE_TLS=false
+      - MONGODB_KEY_PATH=.certs/mongodb/client.pem
+      - MONGODB_CA_PATH=.certs/mongodb/ca.pem
+      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
+      - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
+      - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
+      - RABBITMQ_RPC_TIMEOUT=15000
+    volumes:
+      - ./.certs/categories:/certs:ro
+      - ./logs:/usr/src/categories/logs
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+  expenses:
+    container_name: exp-expenses
+    build: ./expenses
+    restart: always
+    ports:
+      - "6000:6000"
+      - "6001:6001"
+    environment:
+      - TZ=America/Recife
+      - NODE_ENV=development
+      - PORT_HTTP=6000
+      - PORT_HTTPS=6001
+      - ISSUER=exps
+      - MONGODB_URI=mongodb://mongo:27017/expensesDB
+      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - MONGODB_ENABLE_TLS=false
+      - MONGODB_KEY_PATH=.certs/mongodb/client.pem
+      - MONGODB_CA_PATH=.certs/mongodb/ca.pem
+      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
+      - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
+      - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
+      - RABBITMQ_RPC_TIMEOUT=15000
+    volumes:
+      - ./.certs/expenses:/certs:ro
+      - ./logs:/usr/src/expenses/logs
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+  incomes:
+    container_name: exp-incomes
+    build: ./incomes
+    restart: always
+    ports:
+      - "7000:7000"
+      - "7001:7001"
+    environment:
+      - TZ=America/Recife
+      - NODE_ENV=development
+      - PORT_HTTP=7000
+      - PORT_HTTPS=7001
+      - ISSUER=exps
+      - MONGODB_URI=mongodb://mongo:27017/expensesDB
+      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - MONGODB_ENABLE_TLS=false
+      - MONGODB_KEY_PATH=.certs/mongodb/client.pem
+      - MONGODB_CA_PATH=.certs/mongodb/ca.pem
+      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
+      - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
+      - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
+      - RABBITMQ_RPC_TIMEOUT=15000
+    volumes:
+      - ./.certs/incomes:/certs:ro
+      - ./logs:/usr/src/incomes/logs
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+volumes:
+  exp-mongo-data:
+    name: exp-mongo-data
+
+networks:
+  exp-network:
+    name: exp-network
+    driver: bridge
