@@ -1,6 +1,70 @@
 version: "3.8"
 
 services:
+  postgres-api-gateway:
+    image: postgres:16.3-alpine
+    container_name: exp-postgres-api-gateway
+    restart: always
+    environment:
+      - POSTGRES_DB=kong
+      - POSTGRES_USER=${KONG_POSTGRES_USER:-kong}
+      - POSTGRES_PASSWORD=${KONG_POSTGRES_PASS:-kong}
+    volumes:
+      - exp-api-gateway-postgres-data:/var/lib/postgresql/data
+      - ./.certs/postgres/server.crt:/etc/ssl/.certs/server.crt:ro
+      - ./.certs/postgres/server.key:/etc/ssl/.certs/server.key:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-d",
+          "kong",
+          "-U",
+          "${KONG_POSTGRES_USER:-kong}"
+        ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - exp-network
+
+  api-gateway:
+    container_name: exp-api-gateway
+    build: ./api-gateway
+    restart: always
+    depends_on:
+      - postgres-api-gateway
+    ports:
+      - "80:8000"
+      - "443:8443"
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=postgres-api-gateway
+      - KONG_PG_DATABASE=kong
+      - KONG_PG_USER=${KONG_POSTGRES_USER:-kong}
+      - KONG_PG_PASSWORD=${KONG_POSTGRES_PASS:-kong}
+      - KONG_DECLARATIVE_CONFIG=/etc/kong/declarative/kong.yaml
+      - KONG_SSL=on
+      - KONG_SSL_CERT=/etc/ssl/server.crt
+      - KONG_SSL_CERT_KEY=/etc/ssl/server.key
+      - KONG_PROXY_LISTEN=0.0.0.0:8000
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
+      - KONG_ADMIN_SSL_CERT=/etc/ssl/server.crt
+      - KONG_ADMIN_SSL_CERT_KEY=/etc/ssl/server.key
+      - DECK_API_HOSTNAME=${API_HOSTNAME:-api.exp.localhost}
+      - DECK_WEB_APP_HOSTNAME=${WEB_APP_HOSTNAME:-exp.localhost}
+      - DECK_WEB_APP_SERVICE=http://web-app
+      - DECK_ACCOUNT_SERVICE=http://account:3000
+      - DECK_BUDGETS_SERVICE=http://budgets:4000
+      - DECK_CATEGORIES_SERVICE=http://categories:5000
+      - DECK_EXPENSES_SERVICE=http://expenses:6000
+      - DECK_INCOMES_SERVICE=http://incomes:7000
+    volumes:
+      - ./.certs/api-gateway:/etc/ssl/:ro
+    networks:
+      - exp-network
+
   mongo:
     image: mongo:latest
     container_name: exp-mongo
@@ -37,32 +101,33 @@ services:
     build: ./account
     restart: always
     ports:
-      - "3000:3000"
-      - "3001:3001"
+      - "${ACCOUNT_PORT_HTTP:-3000}:3000"
+      - "${ACCOUNT_PORT_HTTPS:-3001}:3001"
     environment:
-      - TZ=America/Recife
-      - NODE_ENV=development
+      - TZ=${TZ:-America/Recife}
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT_HTTP=3000
       - PORT_HTTPS=3001
-      - JWT_SECRET=s1cr1tk1y
+      - JWT_SECRET=${JWT_SECRET:-s1cr1tk1y}
       - SSL_CERT_PATH=/certs/server_cert.pem
       - SSL_KEY_PATH=/certs/server_key.pem
       - JWT_PRIVATE_KEY_PATH=/certs/jwt.key
       - JWT_PUBLIC_KEY_PATH=/certs/jwt.key.pub
-      - ISSUER=exps
-      - ADMIN_EMAIL=admin@exp.com
-      - ADMIN_PASSWORD=admin123
-      - MONGODB_URI=mongodb://mongo:27017/expensesDB
-      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - ISSUER=${ISSUER:-exps}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@exp.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://localhost:27017/account-service}
+      - MONGODB_URI_TEST=mongodb://localhost:27017/account-service-test
       - MONGODB_ENABLE_TLS=false
       - MONGODB_KEY_PATH=.certs/mongodb/client.pem
       - MONGODB_CA_PATH=.certs/mongodb/ca.pem
-      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_URI=${RABBITMQ_URI:-amqp://rabbitmq:5672}
       - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
       - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
       - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
       - RABBITMQ_RPC_TIMEOUT=15000
-      - DASHBOARD_HOST=http://localhost:4200
+      - DASHBOARD_HOST=${DASHBOARD_HOST:-http://localhost:4200}
+      - INTERNAL_GATEWAY_API_URL=${INTERNAL_GATEWAY_API_URL:-http://api-gateway:8001}
     volumes:
       - ./.certs/account:/certs:ro
       - ./logs:/usr/src/account/logs
@@ -78,20 +143,20 @@ services:
     build: ./budgets
     restart: always
     ports:
-      - "4000:4000"
-      - "4001:4001"
+      - "${BUDGETS_PORT_HTTP:-4000}:4000"
+      - "${BUDGETS_PORT_HTTPS:-4001}:4001"
     environment:
-      - TZ=America/Recife
-      - NODE_ENV=development
+      - TZ=${TZ:-America/Recife}
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT_HTTP=4000
       - PORT_HTTPS=4001
-      - ISSUER=exps
-      - MONGODB_URI=mongodb://mongo:27017/expensesDB
-      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - ISSUER=${ISSUER:-exps}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://localhost:27017/budgets-service-test}
+      - MONGODB_URI_TEST=mongodb://localhost:27017/budgets-service-test
       - MONGODB_ENABLE_TLS=false
       - MONGODB_KEY_PATH=.certs/mongodb/client.pem
       - MONGODB_CA_PATH=.certs/mongodb/ca.pem
-      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_URI=${RABBITMQ_URI:-amqp://rabbitmq:5672}
       - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
       - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
       - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
@@ -111,20 +176,20 @@ services:
     build: ./categories
     restart: always
     ports:
-      - "5000:5000"
-      - "5001:5001"
+      - "${CATEGORIES_PORT_HTTP:-5000}:5000"
+      - "${CATEGORIES_PORT_HTTPS:-5001}:5001"
     environment:
-      - TZ=America/Recife
-      - NODE_ENV=development
+      - TZ=${TZ:-America/Recife}
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT_HTTP=5000
       - PORT_HTTPS=5001
-      - ISSUER=exps
-      - MONGODB_URI=mongodb://mongo:27017/expensesDB
-      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - ISSUER=${ISSUER:-exps}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://localhost:27017/categories-service-test}
+      - MONGODB_URI_TEST=mongodb://localhost:27017/categories-service-test
       - MONGODB_ENABLE_TLS=false
       - MONGODB_KEY_PATH=.certs/mongodb/client.pem
       - MONGODB_CA_PATH=.certs/mongodb/ca.pem
-      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_URI=${RABBITMQ_URI:-amqp://rabbitmq:5672}
       - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
       - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
       - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
@@ -144,20 +209,20 @@ services:
     build: ./expenses
     restart: always
     ports:
-      - "6000:6000"
-      - "6001:6001"
+      - "${EXPENSES_PORT_HTTP:-6000}:6000"
+      - "${EXPENSES_PORT_HTTPS:-6001}:6001"
     environment:
-      - TZ=America/Recife
-      - NODE_ENV=development
+      - TZ=${TZ:-America/Recife}
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT_HTTP=6000
       - PORT_HTTPS=6001
-      - ISSUER=exps
-      - MONGODB_URI=mongodb://mongo:27017/expensesDB
-      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - ISSUER=${ISSUER:-exps}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://localhost:27017/expenses-service-test}
+      - MONGODB_URI_TEST=mongodb://localhost:27017/expenses-service-test
       - MONGODB_ENABLE_TLS=false
       - MONGODB_KEY_PATH=.certs/mongodb/client.pem
       - MONGODB_CA_PATH=.certs/mongodb/ca.pem
-      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_URI=${RABBITMQ_URI:-amqp://rabbitmq:5672}
       - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
       - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
       - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
@@ -177,20 +242,20 @@ services:
     build: ./incomes
     restart: always
     ports:
-      - "7000:7000"
-      - "7001:7001"
+      - "${INCOMES_PORT_HTTP:-7000}:7000"
+      - "${INCOMES_PORT_HTTPS:-7001}:7001"
     environment:
-      - TZ=America/Recife
-      - NODE_ENV=development
+      - TZ=${TZ:-America/Recife}
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT_HTTP=7000
       - PORT_HTTPS=7001
-      - ISSUER=exps
-      - MONGODB_URI=mongodb://mongo:27017/expensesDB
-      - MONGODB_URI_TEST=mongodb://localhost:27017/expensesDB
+      - ISSUER=${ISSUER:-exps}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://localhost:27017/incomes-service-test}
+      - MONGODB_URI_TEST=mongodb://localhost:27017/incomes-service-test
       - MONGODB_ENABLE_TLS=false
       - MONGODB_KEY_PATH=.certs/mongodb/client.pem
       - MONGODB_CA_PATH=.certs/mongodb/ca.pem
-      - RABBITMQ_URI=amqp://rabbitmq:5672
+      - RABBITMQ_URI=${RABBITMQ_URI:-amqp://rabbitmq:5672}
       - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
       - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
       - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
@@ -206,6 +271,8 @@ services:
         max-size: 100m
 
 volumes:
+  exp-api-gateway-postgres-data:
+    name: exp-api-gateway-postgres
   exp-mongo-data:
     name: exp-mongo-data
 
