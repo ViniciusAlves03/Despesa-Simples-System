@@ -13,3 +13,6 @@
 [submodule "expenses"]
 	path = expenses
 	url = https://github.com/ViniciusAlves03/expenses-exp-core.git
+[submodule "api-gateway"]
+	path = api-gateway
+	url = https://github.com/ViniciusAlves03/expenses-api-gateway.git
