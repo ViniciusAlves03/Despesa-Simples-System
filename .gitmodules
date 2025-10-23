@@ -16,3 +16,6 @@
 [submodule "api-gateway"]
 	path = api-gateway
 	url = https://github.com/ViniciusAlves03/expenses-api-gateway.git
+[submodule "notification"]
+	path = notification
+	url = https://github.com/ViniciusAlves03/exp-notification.git

@@ -270,6 +270,38 @@ services:
       options:
         max-size: 100m
 
+  notification:
+    container_name: exp-notification
+    build: ./notification
+    restart: always
+    ports:
+      - "${NOTIFICATION_PORT_HTTP:-9000}:9000"
+      - "${NOTIFICATION_PORT_HTTPS:-9001}:9001"
+    environment:
+      - TZ=${TZ:-America/Recife}
+      - NODE_ENV=${NODE_ENV:-development}
+      - SSL_CERT_PATH=/certs/server_cert.pem
+      - SSL_KEY_PATH=/certs/server_key.pem
+      - SQLITE_ENABLE_LOGS=${SQLITE_ENABLE_LOGS:-false}
+      - SQLITE_URI=${SQLITE_URI:-sqlite::memory:}
+      - SQLITE_URI_TEST=${SQLITE_URI_TEST:-sqlite::memory:}
+      - SQLITE_ENABLE_TLS=${SQLITE_ENABLE_TLS:-false}
+      - SQLITE_KEY_PATH=/certs/sqlite/client.pem
+      - SQLITE_CA_PATH=/certs/sqlite/ca.pem
+      - RABBITMQ_URI=${RABBITMQ_URI:-amqp://guest:guest@rabbitmq:5672}
+      - RABBITMQ_CERT_PATH=/certs/rabbitmq/cert.pem
+      - RABBITMQ_KEY_PATH=/certs/rabbitmq/key.pem
+      - RABBITMQ_CA_PATH=/certs/rabbitmq/ca.pem
+    volumes:
+      - ./.certs:/certs:ro
+      - ./logs:/usr/src/notification/logs
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
 volumes:
   exp-api-gateway-postgres-data:
     name: exp-api-gateway-postgres
