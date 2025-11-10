@@ -1,21 +1,24 @@
 [submodule "account"]
 	path = account
-	url = https://github.com/ViniciusAlves03/expenses-account.git
-[submodule "budgets"]
-	path = budgets
-	url = https://github.com/ViniciusAlves03/expenses-budgets.git
-[submodule "incomes"]
-	path = incomes
-	url = https://github.com/ViniciusAlves03/expenses-incomes.git
-[submodule "categories"]
-	path = categories
-	url = https://github.com/ViniciusAlves03/expenses-categories.git
-[submodule "expenses"]
-	path = expenses
-	url = https://github.com/ViniciusAlves03/expenses-exp-core.git
+	url = https://github.com/ViniciusAlves03/DS-account.git
+[submodule "analytics"]
+	path = analytics
+	url = https://github.com/ViniciusAlves03/DS-analytics.git
 [submodule "api-gateway"]
 	path = api-gateway
-	url = https://github.com/ViniciusAlves03/expenses-api-gateway.git
+	url = https://github.com/ViniciusAlves03/DS-api-gateway.git
+[submodule "budgets"]
+	path = budgets
+	url = https://github.com/ViniciusAlves03/DS-budgets.git
+[submodule "categories"]
+	path = categories
+	url = https://github.com/ViniciusAlves03/DS-categories.git
+[submodule "expenses"]
+	path = expenses
+	url = https://github.com/ViniciusAlves03/DS-expenses.git
+[submodule "incomes"]
+	path = incomes
+	url = https://github.com/ViniciusAlves03/DS-incomes.git
 [submodule "notification"]
 	path = notification
-	url = https://github.com/ViniciusAlves03/exp-notification.git
+	url = https://github.com/ViniciusAlves03/DS-notification.git
