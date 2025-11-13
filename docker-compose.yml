@@ -52,14 +52,15 @@ services:
       - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
       - KONG_ADMIN_SSL_CERT=/etc/ssl/server.crt
       - KONG_ADMIN_SSL_CERT_KEY=/etc/ssl/server.key
-      - DECK_API_HOSTNAME=${API_HOSTNAME:-api.exp.localhost}
+      - DECK_API_HOSTNAME=${API_HOSTNAME:-api.ds.localhost}
       - DECK_WEB_APP_HOSTNAME=${WEB_APP_HOSTNAME:-exp.localhost}
-      - DECK_WEB_APP_SERVICE=http://web-app
-      - DECK_ACCOUNT_SERVICE=http://account:3000
-      - DECK_BUDGETS_SERVICE=http://budgets:4000
-      - DECK_CATEGORIES_SERVICE=http://categories:5000
-      - DECK_EXPENSES_SERVICE=http://expenses:6000
-      - DECK_INCOMES_SERVICE=http://incomes:7000
+      - DECK_WEB_APP_SERVICE=${WEB_APP_HOSTNAME:-http://web-app}
+      - DECK_ACCOUNT_SERVICE=${ACCOUNT_PORT_HTTP:-http://account:3000}
+      - DECK_BUDGETS_SERVICE=${BUDGETS_PORT_HTTP:-http://budgets:4000}
+      - DECK_CATEGORIES_SERVICE=${CATEGORIES_PORT_HTTP:-http://categories:5000}
+      - DECK_EXPENSES_SERVICE=${EXPENSES_PORT_HTTP:-http://expenses:6000}
+      - DECK_INCOMES_SERVICE=${INCOMES_PORT_HTTP:-http://incomes:7000}
+      - DECK_ANALYTICS_SERVICE=${ANALYTICS_PORT_HTTP:-http://analytics:10000}
     volumes:
       - ./.certs/api-gateway:/etc/ssl/:ro
     networks:
@@ -131,6 +132,39 @@ services:
     volumes:
       - ./.certs/account:/certs:ro
       - ./logs:/usr/src/account/logs
+    networks:
+      - exp-network
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+  analytics:
+    container_name: exp-analytics
+    build: ./analytics
+    restart: always
+    ports:
+      - "${ANALYTICS_PORT_HTTP:-10000}:10000"
+      - "${ANALYTICS_PORT_HTTPS:-10001}:10001"
+    environment:
+      - TZ=${TZ:-America/Recife}
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT_HTTP=10000
+      - PORT_HTTPS=10001
+      - ISSUER=${ISSUER:-exps}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://localhost:27017/analytics-service-test}
+      - MONGODB_URI_TEST=mongodb://localhost:27017/analytics-service-test
+      - MONGODB_ENABLE_TLS=false
+      - MONGODB_KEY_PATH=.certs/mongodb/client.pem
+      - MONGODB_CA_PATH=.certs/mongodb/ca.pem
+      - RABBITMQ_URI=${RABBITMQ_URI:-amqp://rabbitmq:5672}
+      - RABBITMQ_CERT_PATH=.certs/rabbitmq/cert.pem
+      - RABBITMQ_KEY_PATH=.certs/rabbitmq/key.pem
+      - RABBITMQ_CA_PATH=.certs/rabbitmq/ca.pem
+      - RABBITMQ_RPC_TIMEOUT=15000
+    volumes:
+      - ./.certs/analytics:/certs:ro
+      - ./logs:/usr/src/analytics/logs
     networks:
       - exp-network
     logging:
