@@ -2,7 +2,7 @@
 # Define where to store the generated certs and metadata.
 DIR="$(pwd)/.certs"
 
-SERVICES_NAMES=api-gateway,web-app,account,budgets,categories,expenses,incomes,notification
+SERVICES_NAMES=api-gateway,web-app,account,budgets,categories,expenses,incomes
 
 rm -rf $DIR
 mkdir -p $DIR
@@ -38,9 +38,9 @@ createOpenSSLConfig() {
   countryName                    = BR
   stateOrProvinceName            = PB
   localityName                   = Campina Grande
-  organizationName               = EXP
-  organizationalUnitName         = EXP
-  commonName                     = EXP CA
+  organizationName               = DS
+  organizationalUnitName         = DS
+  commonName                     = DS CA
 
   ####################################################################
   [ ca_extensions ]
@@ -95,7 +95,7 @@ createOpenSSLConfig
 openssl req -x509 \
   -config "$DIR/openssl.cnf" \
   -nodes -days 3650 \
-  -subj "/O=EXP,CN=EXP CA" \
+  -subj "/O=DS,CN=DS CA" \
   -keyout "$DIR/ca.key" \
   -out "$DIR/ca.pem" 2>/dev/null
 
@@ -130,7 +130,7 @@ generateCerts() {
   openssl req \
     -new -nodes \
     -key "$5/$4.key" \
-    -subj "/O=$ORG/CN=EXP" \
+    -subj "/O=$ORG/CN=DS" \
     -out "$5/$4.csr" 2>/dev/null
 
   # Sign the CSR with our CA. This will generate a new certificate that is signed
