@@ -47,8 +47,8 @@ Este repositório utiliza **Git Submodules**. Siga atentamente as instruções d
 1.  **Clone o repositório (Recursive):**
     Use o comando `--recursive` para clonar o repositório e inicializar todos os submódulos de uma só vez.
     ```bash
-    git clone --recursive [https://github.com/ViniciusAlves03/Despesa-Simples-System.git] ds-system
-    cd ds-system
+    git clone --recursive https://github.com/ViniciusAlves03/Despesa-Simples-System.git Despesa-Simples-System
+    cd Despesa-Simples-System
     ```
     *Se você já clonou sem o `--recursive`, rode `git submodule init` seguido de `git submodule update`.*
 
@@ -80,7 +80,7 @@ Este repositório utiliza **Git Submodules**. Siga atentamente as instruções d
 ## 🏗️ Estrutura do Projeto
 
 ```sh
-ds-system/
+Despesa-Simples-System/
 ├── .gitmodules                # Define os repositórios dos microsserviços
 ├── create-self-signed-certs.sh  # Script para gerar certs SSL locais
 ├── docker-compose.yml           # Arquivo principal de orquestração
